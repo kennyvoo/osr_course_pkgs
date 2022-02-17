@@ -31,8 +31,8 @@ class PRM_planner:
 
   def construct_graph(self,n_sample=200,n_neighbors=5,max_radius=1):
     """
-    Sample n_sample of vertices, form collision-free edges
-    with vertices of length between min_distance and max_distance. 
+    Randomly sample n_sample of vertices, and form collision-free edges
+    with vertices around max_radius 
 
     n_sample       - number of vertices to sample from map
     n_neighbors    - number of neighbors to connect between vertices
@@ -62,7 +62,7 @@ class PRM_planner:
 
   def form_edges(self,free_vertices, n_neighbors,max_rad):
     """
-    form up to n_neighbors of edges from the vertices in the free space within (min_dist,max_dist) 
+    form up to n_neighbors of edges with the vertices in the max_rad space 
 
     free_vertices - number of vertices to sample from map
     n_neighbors   - number of neighbors to connect between vertices
@@ -169,11 +169,37 @@ class PRM_planner:
 
       return True #path found
 
+  def optimize_path(self):
+      """
+      Using brute force method to optimize the path
+      """
+      left=0
+      right=len(self.solution)-1
+      optimized_path=[]
+      while(left!=right):
+        for i in range(right-left):
+            if left==right-i:
+              optimized_path.append(left)
+              break
+            if not self.check_collision([self.solution[left],self.solution[right-i]]):
+              optimized_path.append(self.solution[left])
+              optimized_path.append(self.solution[right-i])
+              left=right-i
+              break
+        left+=1
+        if optimized_path[-1]==self.solution[-1]:
+          break
+
+      return optimized_path
+
+
+
+
 if __name__ == "__main__":
     parser= argparse.ArgumentParser(description="PRM planner")
     parser.add_argument("--seed",help="set seed",default=4)
     parser.add_argument("-s","--n_sample",help="number of vertex to start with",default=1000)
-    parser.add_argument("-n","--n_neighbors",help="no of nearest edges to connect",default=10)
+    parser.add_argument("-n","--n_neighbors",help="no of nearest vertex to connect",default=10)
     parser.add_argument("-r","--max_radius",help="maximum search space",default=10)
 
     parser.add_argument("--map_width",help="width of map",default=10)
@@ -216,12 +242,29 @@ if __name__ == "__main__":
 
     pl.title("No solution")
 
-    #if there's solution, draw
-    if prm.find_path():   
-      x= np.array(prm.solution)[:,0]
-      y= np.array(prm.solution)[:,1]
-      # save map with solution path 
-      pl.plot(x,y,color='red',linewidth=3)
-      pl.savefig(f"{args.output_image_path}/3_solution_map.png")
-      pl.title("Solution Found")
-    pl.show(block = True)
+    #if no solution, exit 
+    if not prm.find_path():   
+      exit 
+
+    # save map with solution path 
+    x= np.array(prm.solution)[:,0]
+    y= np.array(prm.solution)[:,1]
+    pl.plot(x[1:-2],y[1:-2],color='red',linewidth=3)
+    pl.plot(x[:2],y[:2],color='yellow',linewidth=3)
+    pl.plot(x[-2:],y[-2:],color='yellow',linewidth=3)
+    pl.title("Solution Found")
+
+    pl.savefig(f"{args.output_image_path}/3_solution_path.png")
+  #  pl.show(block = True)
+
+    
+    #optimized_path
+    optimized_path= prm.optimize_path()
+    pl.clf()
+    env.plot()
+    env.plot_query(x_start, y_start, x_goal, y_goal)
+    x= np.array(optimized_path)[:,0]
+    y= np.array(optimized_path)[:,1]
+    pl.plot(x,y,color='yellow',linewidth=3)
+    pl.title("Optimized Solution")
+    pl.savefig(f"{args.output_image_path}/4_optimized_path.png")
