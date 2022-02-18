@@ -20,16 +20,16 @@ class PRM_planner:
   """
 
   def __init__(self,env,init,goal):
-    self.env=env
-    self.init=init
-    self.goal=goal
-    self.local_planner=dijkstra()
-    self.obs_polygons=[]
-    self.edges=set()
-    self.vertices=set()
-    self.solution=None
+    self.env = env
+    self.init = init
+    self.goal = goal
+    self.local_planner = dijkstra()
+    self.obs_polygons = []
+    self.edges = set()
+    self.vertices = set()
+    self.solution = None
 
-  def construct_graph(self,n_sample=200,n_neighbors=5,max_radius=1):
+  def construct_graph(self,n_sample = 200, n_neighbors = 5, max_radius = 1):
     """
     Randomly sample n_sample of vertices, and form collision-free edges
     with vertices around max_radius 
@@ -39,19 +39,19 @@ class PRM_planner:
     max_radius     - max search space / maximum length of edges
 
     """
-    self.edges=set()
-    self.vertices=set()
+    self.edges = set()
+    self.vertices = set()
 
 
     # randomly sample vertices 0.5 away from the map border
     # vertices=np.round(np.random.rand(n_sample,2)* [self.env.size_x-1,self.env.size_y-1]+[0.5,0.5],2)
-    vertices=np.round(np.random.rand(n_sample,2)* [self.env.size_x,self.env.size_y],2)
+    vertices = np.round(np.random.rand(n_sample,2)* [self.env.size_x,self.env.size_y],2)
 
     # retrieve obstacle from map
     self.get_obstacles_polygons()
 
     # Get collision free vertices
-    free_vertices=[]
+    free_vertices = []
     for x,y in vertices:
         if not self.env.check_collision(x,y):
             free_vertices.append((x,y))
@@ -71,8 +71,8 @@ class PRM_planner:
 
     """
     # +1 to have 5 edges excluding itself
-    knn=NearestNeighbors(n_neighbors=n_neighbors+1,radius=max_rad).fit(free_vertices)
-    distance,indices=knn.kneighbors(free_vertices)
+    knn = NearestNeighbors(n_neighbors=n_neighbors+1,radius=max_rad).fit(free_vertices)
+    distance,indices = knn.kneighbors(free_vertices)
     
     # arr[0] is the vertex itself
     for arr,dists in zip(indices,distance):
@@ -81,7 +81,7 @@ class PRM_planner:
         # find the nearest neighbour excluding itself
         for index,dist in zip(arr[1:], dists):
             #retrieve the 2 connected vertices
-            v1,v2=free_vertices[arr[0]],free_vertices[index]
+            v1,v2 = free_vertices[arr[0]],free_vertices[index]
             
             # check if they intersect with the obstacles
             if not self.check_collision([v1,v2]):
@@ -96,8 +96,8 @@ class PRM_planner:
                 # else:
                 #     self.edges.add((v2, v1,round(dist,3)))
 
-    self.edges=list(self.edges)
-    self.vertices=list(self.vertices)
+    self.edges = list(self.edges)
+    self.vertices = list(self.vertices)
 
   def get_obstacles_polygons(self):
     """
@@ -128,15 +128,15 @@ class PRM_planner:
     n_neighbors   - number of neighbors to connect between vertices
     radius  - maximum space to search for / maximum length of edges
     """
-    knn=NearestNeighbors(n_neighbors=n_neighbors,radius=radius).fit(self.vertices)
+    knn = NearestNeighbors(n_neighbors=n_neighbors,radius=radius).fit(self.vertices)
     # distance is already sorted
-    distance,indices=knn.kneighbors([point])
+    distance,indices = knn.kneighbors([point])
 
     connected=False
     for index,dist in zip(indices[0], distance[0]):
-        v1,v2=point,self.vertices[index]
+        v1,v2 = point,self.vertices[index]
         if not self.check_collision([v1,v2]):
-            connected=True
+            connected = True
             if front:
               self.edges.append((v1 ,v2,round(dist,2)))
             else:
@@ -162,7 +162,7 @@ class PRM_planner:
       # print(returned_path)
       if len(returned_path)>1:
         print(returned_path) 
-        self.solution=returned_path
+        self.solution = returned_path
       else:
         print("No solution")
         return False
@@ -173,21 +173,21 @@ class PRM_planner:
       """
       Using brute force method to optimize the path
       """
-      left=0
-      right=len(self.solution)-1
+      left = 0
+      right = len(self.solution)-1
       optimized_path=[]
-      while(left!=right):
+      while(left != right):
         for i in range(right-left):
-            if left==right-i:
+            if left == right-i:
               optimized_path.append(left)
               break
             if not self.check_collision([self.solution[left],self.solution[right-i]]):
               optimized_path.append(self.solution[left])
               optimized_path.append(self.solution[right-i])
-              left=right-i
+              left = right-i
               break
-        left+=1
-        if optimized_path[-1]==self.solution[-1]:
+        left += 1
+        if optimized_path[-1] == self.solution[-1]:
           break
 
       return optimized_path
@@ -227,8 +227,8 @@ if __name__ == "__main__":
     
 
     
-    # Path planning
-    prm=PRM_planner(env,(round(x_start,2),round(y_start,2)),(round(x_goal,2),round(y_goal,2)))
+    ## Path planning
+    prm = PRM_planner(env,(round(x_start,2),round(y_start,2)),(round(x_goal,2),round(y_goal,2)))
     prm.construct_graph(n_sample=int(args.n_sample),n_neighbors=int(args.n_neighbors),max_radius=int(args.max_radius))
     
     
@@ -240,15 +240,14 @@ if __name__ == "__main__":
     pl.savefig(f"{args.output_image_path}/2_map_with_edges.png")
 
 
-    pl.title("No solution")
-
     #if no solution, exit 
     if not prm.find_path():   
-      exit 
+      sys.exit(0)
+ 
 
     # save map with solution path 
-    x= np.array(prm.solution)[:,0]
-    y= np.array(prm.solution)[:,1]
+    x = np.array(prm.solution)[:,0]
+    y = np.array(prm.solution)[:,1]
     pl.plot(x[1:-2],y[1:-2],color='red',linewidth=3)
     pl.plot(x[:2],y[:2],color='yellow',linewidth=3)
     pl.plot(x[-2:],y[-2:],color='yellow',linewidth=3)

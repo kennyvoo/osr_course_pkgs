@@ -6,11 +6,13 @@
 ## Dependencies
 1. scikit-learn = 0.24.2
 2. Shapely = 1.8.1
+3. numpy = 1.22.2
+
 
 ## Installation
 1. gitclone this repo.
 
-2. Conda environment file will be provided soon.
+2. conda env create -f osr_prm.yml
 
 &nbsp;
 
@@ -18,7 +20,7 @@
 ```python
 1. python PRM.py
 
-or
+or 
 
 2. python PRM.py -s 1000 -n 10 -r 10 --seed 4 
 
@@ -30,6 +32,9 @@ or
     map_height     - map height
     n_obstacle     - number of obstacle
     output_image_path - path to save result
+
+
+
 
 ```
   
